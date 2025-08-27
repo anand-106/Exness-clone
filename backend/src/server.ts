@@ -24,9 +24,9 @@ app.get('/',(req,res)=>{
 app.get('/candles',async (req,res)=>{
     try{
         console.log("handle hitted")
-        const symbol = "SOLUSDT";
-        const interval = 'trades_1m'
-        const limit = 100
+        const symbol = req.query.symbol as string;
+        const interval = req.query.interval as string
+        const limit = parseInt(req.query.limit as string)
         
         
         const query = `SELECT timestamp , symbol ,open_price,close_price,high_price,low_price from ${interval} where symbol = '${symbol}' ORDER BY timestamp DESC LIMIT ${limit}`
