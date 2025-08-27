@@ -25,7 +25,7 @@ async function main(){
     
     const redis = createClient({url:"redis://localhost:6379"})
     await redis.connect();
-    const ws = new WebSocket("wss://stream.binance.com:9443/stream?streams=solusdt@trade")
+    const ws = new WebSocket("wss://stream.binance.com:9443/stream?streams=solusdt@trade/ethusdt@trade/btcusdt@trade")
 
     let tradeBuffer:Trade[] = []
 
@@ -64,10 +64,13 @@ async function main(){
             price:data.data.p,
             trade_time: new Date(data.data.T),
         }
+        const price = parseFloat(data.data.p)
 
         const redisData = {
             symbol:data.data.s,
-            price:parseFloat(data.data.p),
+            price: price ,
+            askPrice:Math.round(((.005*price)+price)*100)/100,
+            bidPrice: Math.round(price * 100) / 100,
             trade_time: new Date(data.data.T),
         }
 

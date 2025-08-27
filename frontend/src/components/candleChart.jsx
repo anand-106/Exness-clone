@@ -5,6 +5,7 @@ import axios from 'axios';
 export default function CandleChart() {
   const chartContainerRef = useRef(null);
   const [intervalValue,setIntervalValue]= useState("trades_1m")
+  const [symbolValue,setSymbolValue]= useState("SOLUSDT")
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -26,7 +27,7 @@ export default function CandleChart() {
       wickDownColor: '#ef5350',
     });
 
-    axios.get(`http://localhost:4000/candles?symbol=SOLUSDT&limit=100&interval=${intervalValue}`).then(
+    axios.get(`http://localhost:4000/candles?symbol=${symbolValue}&limit=100&interval=${intervalValue}`).then(
         res=>{
             candleSeries.setData(res.data);
         }
@@ -37,7 +38,7 @@ export default function CandleChart() {
     chart.timeScale().fitContent();
 
     return () => chart.remove();
-  }, [intervalValue]);
+  }, [intervalValue,symbolValue]);
 
   return <div>
     <select
@@ -47,6 +48,15 @@ export default function CandleChart() {
         <option value="trades_1m">1 min</option>
         <option value="trades_5m">5 min</option>
         <option value="trades_15m">15 min</option>
+
+    </select>
+    <select
+    value={symbolValue}
+    onChange={(e)=>{setSymbolValue(e.target.value)}}
+    >
+        <option value="SOLUSDT">SOLUSDT</option>
+        <option value="ETHUSDT">ETHUSDT</option>
+        <option value="BTCUSDT">BTCUSDT</option>
 
     </select>
       <div ref={chartContainerRef} style={{ width: '600px', height: '400px' }} />;

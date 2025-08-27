@@ -1,19 +1,18 @@
-import { AskBid } from "./components/askBid"
-import CandleChart from "./components/candleChart"
+import {BrowserRouter,Routes,Route} from 'react-router-dom'
+import { Home } from './home'
+import { Signin } from './components/signin'
 
 
 function App() {
   
 
   return (
-    <div>
-      Exness
-      <div className="flex " >
-
-      <AskBid />
-      <CandleChart />
-      </div>
-    </div>
+    <BrowserRouter>
+    <Routes>
+      <Route path='/' element={<Home/>} />
+      <Route path='/signin' element={<Signin/>} />
+    </Routes>
+    </BrowserRouter>
   )
 }
 
