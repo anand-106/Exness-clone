@@ -36,33 +36,35 @@ client.on("message",(channel,message)=>{
         if(orders){
             Object.entries(orders).forEach(([id,order])=>{
                 if(order.type=="buy" && order.status=="open"){
-                    order.pnl = LatestPrices[order.asset]!*order.qty - order.price*order.qty
+                    order.pnl = LatestPrices[order.asset]!*order.qty - order.price*order.qty;
+                    order.position = LatestPrices[order.asset]!*order.qty;
                     if(-(order.pnl)>= (.9*order.margin))
                     {
                         closeOrder(id,"liquidated")
                         console.log("order liquidated with id ", id)
                     }
-                    else if(order.stopLoss && -(order.pnl)>= ((order.stopLoss/100)*(LatestPrices[order.asset]!*order.qty)) ){
+                    else if(order.stopLoss && order.stopLoss >= order.position){
                         closeOrder(id,"closed")
                         console.log("order closed by stoploss with id ", id)
                     }
-                    else if(order.takeProfit && order.pnl>= ((order.takeProfit/100)*(LatestPrices[order.asset]!*order.qty))) {
+                    else if(order.takeProfit && order.position >= order.takeProfit) {
                         closeOrder(id,"closed")
                         console.log("order closed by takeProfit with id ", id)
                     }
                 }
                 else if(order.type=="sell" && order.status=="open"){
                     order.pnl = order.price*order.qty - LatestPrices[order.asset]!*order.qty
+                    order.position = LatestPrices[order.asset]!*order.qty
                     if(-(order.pnl)>= (.9*order.margin))
                     {
                         closeOrder(id,"liquidated")
                         console.log("order liquidated with id ", id)
                     }
-                    else if(order.stopLoss && -(order.pnl)>= ((order.stopLoss/100)*(LatestPrices[order.asset]!*order.qty)) ){
+                    else if(order.stopLoss && order.position >= order.stopLoss ){
                         closeOrder(id,"closed")
                         console.log("order closed by stoploss with id ", id)
                     }
-                    else if(order.takeProfit && order.pnl>= ((order.takeProfit/100)*(LatestPrices[order.asset]!*order.qty))) {
+                    else if(order.takeProfit && order.position <= order.takeProfit) {
                         closeOrder(id,"closed")
                         console.log("order closed by takeProfit with id ", id)
                     }
@@ -92,6 +94,7 @@ interface User {
     qty:number;
     leverage:number;
     margin:number;
+    position:number;
     stopLoss?:number;
     takeProfit?:number;
     status: "open" | "closed" | "liquidated";
@@ -195,6 +198,7 @@ app.post("/order/open", (req,res)=>{
         qty:qty,
         leverage:leverage,
         margin:margin,
+        position:0,
         status:"open",
         pnl:0,
         takeProfit:takeProfit,
