@@ -41,7 +41,7 @@ export function Home(){
           <div className=" flex h-full w-full"  >
     
           <AskBid />
-          <CandleChart />
+          <CandleChart symbolValue={selectedAsset} />
           <MakeOrder />
           </div>
         </div>

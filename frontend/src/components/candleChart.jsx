@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, CandlestickSeries } from 'lightweight-charts';
 import axios from 'axios';
 
-export default function CandleChart() {
+export default function CandleChart({symbolValue}) {
   const chartContainerRef = useRef(null);
   const [intervalValue,setIntervalValue]= useState("trades_1m")
-  const [symbolValue,setSymbolValue]= useState("SOLUSDT")
+  
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -14,8 +14,8 @@ export default function CandleChart() {
       width: 600,
       height: 400,
       layout: {
-        background: { type: 'solid', color: 'white' },
-        textColor: '#333',
+        background: { type: 'solid', color: '#141d22' },
+        textColor: '#ffffff',
       },
     });
 
@@ -50,15 +50,7 @@ export default function CandleChart() {
         <option value="trades_15m">15 min</option>
 
     </select>
-    <select
-    value={symbolValue}
-    onChange={(e)=>{setSymbolValue(e.target.value)}}
-    >
-        <option value="SOLUSDT">SOLUSDT</option>
-        <option value="ETHUSDT">ETHUSDT</option>
-        <option value="BTCUSDT">BTCUSDT</option>
-
-    </select>
-      <div ref={chartContainerRef} style={{ width: '600px', height: '400px' }} />;
+    
+      <div ref={chartContainerRef} style={{ width: '600px', height: '400px' }} />
     </div>
 }
