@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWsStore } from "../utils/wsstore";
+import { LOGOS } from "./logos";
 
 export function AskBid() {
   const [trades,setTrades] = useState({})
@@ -34,14 +35,18 @@ export function AskBid() {
         let bidColor = "";
         let askColor = "";
 
-        if(price>=prevTrade.prevPrice)
+        if(price>prevTrade.prevPrice)
         {
-            bidColor="text-green-500";
-            askColor = "text-green-500";
+            bidColor="bg-green-500 text-black";
+            askColor = "bg-green-500 text-black";
+        }
+        else if(price==prevTrade.prevPrice){
+          bidColor="";
+            askColor = "";
         }
         else{
-            bidColor="text-red-500";
-            askColor = "text-red-500";
+            bidColor="bg-red-500";
+            askColor = "bg-red-500";
         }
 
         
@@ -58,21 +63,33 @@ export function AskBid() {
   , [latestTrade]);
 
   return (
-    <div className="flex flex-col w-[400px]">
-      <div className="flex justify-between">
-        <h1>Symbol</h1>
-        <h1>Bid</h1>
-        <h1>Ask</h1>
-      </div>
+    <div className="flex flex-col w-[400px] h-full bg-[#3f474a] p-1 mt-1">
+      <div className="bg-[#141d22] rounded-md w-full h-full">
+
+      <table>
+
+      <thead className="">
+        <tr>
+
+        <th className="px-2 py-1">Symbol</th>
+        <th className="px-2 py-1">Bid</th>
+        <th className="px-2 py-1">Ask</th>
+        </tr>
+      </thead>
+      <tbody>
+
       {
         Object.entries(trades).map(([symbol,trade])=>{
-            return <div className="flex justify-between" >
-                <h1>{symbol}</h1>
-                <h1 className={trade.bidColor} >{trade.bid.toFixed(2)}</h1>
-                <h1 className={trade.askColor} >{trade.ask.toFixed(2)}</h1>
-            </div>
+          return <tr className="" >
+                <td className="px-2 py-1 flex w-30 items-center"><img className="h-6 " src={LOGOS[symbol]} /><div className="p-1">{symbol}</div></td>
+                <td className="px-2 py-1" ><div className={`p-1 ${trade.bidColor} rounded-md transition-colors duration-300 ease-out`}>{trade.bid.toFixed(2)}</div></td>
+                <td className="px-2 py-1" > <div className={`p-1 ${trade.askColor} rounded-md transition-colors duration-300 ease-out`}>{trade.ask.toFixed(2)}</div></td>
+            </tr>
         })
       }
+      </tbody>
+      </table>
+      </div>
     </div>
   );
 }
