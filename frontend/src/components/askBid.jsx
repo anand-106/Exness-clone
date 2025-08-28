@@ -1,16 +1,27 @@
 import { useEffect, useState } from "react";
+import { useWsStore } from "../utils/wsstore";
 
 export function AskBid() {
   const [trades,setTrades] = useState({})
 
+
+  const latestTrade = useWsStore((state)=>state.latestTrade)
+  const connect  = useWsStore((state)=>state.connect)
+
+  useEffect(()=>{
+    const ws = connect();
+    return ()=>{
+      if (ws) ws.close()
+    }
+  },[])
+
+
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080");
-
-    ws.onopen = () => console.log("WebSocket connected");
-    ws.onclose = () => console.log("WebSocket disconnected");
-
-    ws.onmessage = (msg) => {
-      const data = JSON.parse(msg.data);
+    
+    
+    if(!latestTrade) return;
+    
+      const data = JSON.parse(latestTrade);
       const price = parseFloat(data.price);
       const askPrice = parseFloat(data.askPrice);
       const bidPrice = parseFloat(data.bidPrice);
@@ -23,7 +34,7 @@ export function AskBid() {
         let bidColor = "";
         let askColor = "";
 
-        if(price>prevTrade.prevPrice)
+        if(price>=prevTrade.prevPrice)
         {
             bidColor="text-green-500";
             askColor = "text-green-500";
@@ -41,10 +52,10 @@ export function AskBid() {
         };
       })   
       
-    };
+    }
 
-    return () => ws.close();
-  }, []);
+    
+  , [latestTrade]);
 
   return (
     <div className="flex flex-col w-[400px]">

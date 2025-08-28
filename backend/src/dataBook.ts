@@ -32,15 +32,55 @@ client.on("message",(channel,message)=>{
 
         const trade = JSON.parse(message)
         LatestPrices[trade.symbol] = trade.price
+
+        if(orders){
+            Object.entries(orders).forEach(([id,order])=>{
+                if(order.type=="buy" && order.status=="open"){
+                    order.pnl = LatestPrices[order.asset]!*order.qty - order.price*order.qty
+                    if(-(order.pnl)>= (.9*order.margin))
+                    {
+                        closeOrder(id,"liquidated")
+                        console.log("order liquidated with id ", id)
+                    }
+                    else if(order.stopLoss && -(order.pnl)>= ((order.stopLoss/100)*(LatestPrices[order.asset]!*order.qty)) ){
+                        closeOrder(id,"closed")
+                        console.log("order closed by stoploss with id ", id)
+                    }
+                    else if(order.takeProfit && order.pnl>= ((order.takeProfit/100)*(LatestPrices[order.asset]!*order.qty))) {
+                        closeOrder(id,"closed")
+                        console.log("order closed by takeProfit with id ", id)
+                    }
+                }
+                else if(order.type=="sell" && order.status=="open"){
+                    order.pnl = order.price*order.qty - LatestPrices[order.asset]!*order.qty
+                    if(-(order.pnl)>= (.9*order.margin))
+                    {
+                        closeOrder(id,"liquidated")
+                        console.log("order liquidated with id ", id)
+                    }
+                    else if(order.stopLoss && -(order.pnl)>= ((order.stopLoss/100)*(LatestPrices[order.asset]!*order.qty)) ){
+                        closeOrder(id,"closed")
+                        console.log("order closed by stoploss with id ", id)
+                    }
+                    else if(order.takeProfit && order.pnl>= ((order.takeProfit/100)*(LatestPrices[order.asset]!*order.qty))) {
+                        closeOrder(id,"closed")
+                        console.log("order closed by takeProfit with id ", id)
+                    }
+                }
+            })
+        }
     }
 })
 
 
 interface User {
     password: string;
-    balance: Record<string, { qty: number; type?: string }>;
-    equity:number;
-    marginUsed:number;
+    balance:  { 
+        USD: number; 
+        equity:number;
+        marginUsed:number;
+        usableBalance:number; };
+    
   }
 
 
@@ -59,7 +99,7 @@ interface User {
   }
   
 
-const users: Record<string, User> = { anand: { password: '12345678', balance: { USD: {qty:5000} },equity:5000,marginUsed:0 } };
+const users: Record<string, User> = { anand: { password: '12345678', balance: { USD :5000 ,equity:5000,marginUsed:0 ,usableBalance:5000 }} };
 
 const orders : Record<string,Order>={}
 
@@ -77,11 +117,11 @@ app.post('/signup',async (req,res)=>{
     users[username] = {
         password,
         balance: {
-            USD: { qty: 5000.00 },
-            
+            USD: 5000,
+            equity:5000,
+            marginUsed:0,
+            usableBalance:5000, 
         },
-        equity:5000,
-        marginUsed:0 
     };
 
     res.json({message:"User Created Successfully"})
@@ -112,7 +152,7 @@ app.get('/balance',async (req,res)=>{
     if(!user) {
         return res.status(404).json({message: "User not found"});
     }
-    console.log(users)
+    // console.log(users)
     res.json({balance: user.balance})
 })
 
@@ -124,7 +164,7 @@ app.get('/orders',(req,res)=>{
     res.json({orders:activeOrders})
 })
 
-app.post("/order/open",async (req,res)=>{
+app.post("/order/open", (req,res)=>{
 
     const {type,qty,asset,leverage,stopLoss,takeProfit } = req.body;
 
@@ -138,24 +178,70 @@ app.post("/order/open",async (req,res)=>{
     const price=LatestPrices[asset]
     const margin = price!*parseFloat(qty)/parseInt(leverage)
 
+    if(margin>user.balance.usableBalance){
+        return res.status(400).json({message: "insufficient funds"})
+    }
+    user.balance.usableBalance -= margin;
 
-  
-    user.balance[asset] = { type, qty };
+    user.balance.marginUsed += margin
 
     const id  = Date.now().toString()
 
     orders[id]= {
         username:username,
-        type:"buy",
+        type:type,
         asset:asset,
         price:price!,
         qty:qty,
         leverage:leverage,
         margin:margin,
-        status:"open"
+        status:"open",
+        pnl:0,
+        takeProfit:takeProfit,
+        stopLoss:stopLoss
     }
   
     res.json({ message: "Order opened", order: orders[id],balance:user.balance});
+
+})
+
+app.post('/order/close',(req,res)=>{
+        const {id} = req.body
+
+        const username  =  (req as any).username
+
+        const user = users[username];
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        
+
+        const order  = orders[id]
+
+        
+
+        let pnl = 0
+
+        if(!order) {
+            res.status(404).json({message:"order not found"})
+            return
+        }
+
+        if(order.type=="buy"){
+            pnl =(LatestPrices[order.asset]|| 0)*order.qty - order.price*order.qty 
+       }
+       else{
+           pnl = order.price*order.qty - (LatestPrices[order.asset]|| 0)*order.qty
+       }
+
+       user.balance.USD += pnl
+
+        user.balance.marginUsed -= order.margin
+
+        user.balance.usableBalance = user.balance.USD - user.balance.marginUsed
+
+        order.status = "closed"
+
+        res.json({message:"order closed"})
 
 })
 
@@ -163,4 +249,39 @@ app.listen(PORT,()=>{
     console.log(`User Server running on ${PORT}`)
 })
 
+
+function closeOrder(id:string,status:"open"|"closed"|"liquidated"){
+
+
+const order  = orders[id]
+
+        
+
+        let pnl = 0
+
+        if(!order) {
+            
+            return
+        }
+
+        const user  = users[order.username]
+
+        if(!user) return
+
+        if(order.type=="buy"){
+            pnl =(LatestPrices[order.asset]|| 0)*order.qty - order.price*order.qty 
+       }
+       else{
+           pnl = order.price*order.qty - (LatestPrices[order.asset]|| 0)*order.qty
+       }
+
+       user.balance.USD += pnl
+
+        user.balance.marginUsed -= order.margin
+
+        user.balance.usableBalance = user.balance.USD - user.balance.marginUsed
+
+        order.status = status
+
+}
 
