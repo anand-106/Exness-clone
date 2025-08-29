@@ -6,6 +6,7 @@ import ExnessLogo from './assets/exness_logo.png'
 
 import { LOGOS } from "./components/logos"
 import { useState } from "react"
+import { SellAndBuy } from "./components/buyAndSell"
 
 
 export function Home(){
@@ -13,6 +14,8 @@ export function Home(){
   const [selectedAsset,setSelectedAsset] = useState("SOLUSDT")
   const [balance, setBalance] = useState(0)
     const [firstBalance,setFirstBalance] = useState(0)
+    const [orders,setOrders] = useState(null)
+    const [trades,setTrades] = useState({})
 
     return (
         <div className=" w-full h-screen bg-[#141d22] text-white">
@@ -50,11 +53,12 @@ export function Home(){
           <div className=" flex h-full w-full"  >
     
           <AskBid />
-          <div className="w-3xl">
+          <div className="">
 
-          <CandleChart symbolValue={selectedAsset} />
-          <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance}/>
+          <CandleChart symbolValue={selectedAsset} trades={trades} />
+          <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance} setOrders={setOrders} orders={orders} />
           </div>
+          <SellAndBuy selectedAsset={selectedAsset} setOrders={setOrders} setTrades={setTrades} trades={trades} />
           </div>
         </div>
       )

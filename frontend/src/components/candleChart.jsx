@@ -2,10 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, CandlestickSeries } from 'lightweight-charts';
 import axios from 'axios';
 
-export default function CandleChart({symbolValue}) {
+export default function CandleChart({symbolValue,trades}) {
   const chartContainerRef = useRef(null);
   const [intervalValue,setIntervalValue]= useState("trades_1m")
+
+  const candleSeries = useRef(null)
   
+  const currentCandle = useRef(null)
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -38,7 +41,7 @@ export default function CandleChart({symbolValue}) {
       },
     });
 
-    const candleSeries = chart.addSeries(CandlestickSeries, {
+     candleSeries.current = chart.addSeries(CandlestickSeries, {
       upColor: '#26a69a',
       downColor: '#ef5350',
       borderVisible: false,
@@ -49,18 +52,59 @@ export default function CandleChart({symbolValue}) {
 
     axios.get(`http://localhost:4000/candles?symbol=${symbolValue}&limit=100&interval=${intervalValue}`).then(
         res=>{
-            candleSeries.setData(res.data);
+            candleSeries.current.setData(res.data);
         }
     )
 
     
 
-    chart.timeScale().fitContent();
+    // chart.timeScale().fitContent();
 
-    return () => chart.remove();
+    return () => {chart.remove();
+
+      candleSeries.current= null
+    }
   }, [intervalValue,symbolValue]);
 
-  return <div className='p-1 bg-[#3f474a] mt-1'>
+  useEffect(()=>{
+    try{
+      
+      const tick = trades[symbolValue]
+
+      if(!tick) return;
+
+      const ts = Math.floor(new Date(tick.time).getTime() / 1000);
+
+      let step = 60;
+      if (intervalValue=="trades_5m") step = 300;
+      if (intervalValue=="trades_15m") step = 900;
+
+      const candleTime = Math.floor(ts/step)*step;
+
+      if(!currentCandle.current || currentCandle.current.time !== candleTime){
+        currentCandle.current = {
+          time: candleTime, 
+          open: tick.price,
+          high: tick.price,
+          low: tick.price,
+          close: tick.price,
+        }
+      }
+      else{
+          currentCandle.current.high = Math.max(tick.price,currentCandle.current.high)
+          currentCandle.current.low = Math.min(tick.price,currentCandle.current.low)
+          currentCandle.current.close = tick.price
+      }
+      candleSeries.current.update(currentCandle.current)
+    }catch(err){
+      console.error(err)
+    }
+    
+  },[trades,symbolValue,intervalValue])
+
+  
+
+  return <div className='p-1 bg-[#3f474a] mt-1 w-[770px]'>
     <div className="bg-[#141d22] rounded-md w-full">
 
     <select

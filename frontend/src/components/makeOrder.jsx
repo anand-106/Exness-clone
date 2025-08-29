@@ -2,11 +2,11 @@ import axios from "axios"
 import { useEffect, useRef, useState } from "react"
 import { useWsStore } from "../utils/wsstore"
 
-export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance}){
+export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance,orders,setOrders}){
 
     const latestTrade = useWsStore((state)=>state.latestTrade)
     const [trades,setTrades] = useState({})
-    const [orders,setOrders] = useState(null)
+   
     
 
     const totalPNL = useRef(0)
