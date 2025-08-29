@@ -11,6 +11,8 @@ import { useState } from "react"
 export function Home(){
 
   const [selectedAsset,setSelectedAsset] = useState("SOLUSDT")
+  const [balance, setBalance] = useState(0)
+    const [firstBalance,setFirstBalance] = useState(0)
 
     return (
         <div className=" w-full h-screen bg-[#141d22] text-white">
@@ -37,12 +39,22 @@ export function Home(){
             <img src={LOGOS["ETHUSDT"]} className="w-9" />
             <h1 className="text-xl">ETH</h1>
           </div>
+          <div className="ml-[300px]">
+            <h1 className="text-[13px] text-white/20">Standard</h1>
+            <div className="flex gap-1 ">
+
+            <h1 className="font-semibold">{balance.toFixed(2)}</h1> <h1> USD</h1>
+            </div>
+          </div>
           </div>
           <div className=" flex h-full w-full"  >
     
           <AskBid />
+          <div className="w-3xl">
+
           <CandleChart symbolValue={selectedAsset} />
-          <MakeOrder />
+          <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance}/>
+          </div>
           </div>
         </div>
       )

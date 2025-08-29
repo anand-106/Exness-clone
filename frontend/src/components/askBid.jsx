@@ -71,9 +71,9 @@ export function AskBid() {
       <thead className="">
         <tr>
 
-        <th className="px-2 py-1">Symbol</th>
-        <th className="px-2 py-1">Bid</th>
-        <th className="px-2 py-1">Ask</th>
+        <th className="px-2 py-1 font-medium text-sm text-white/50">Symbol</th>
+        <th className="px-2 py-1 font-medium text-sm text-white/50">Bid</th>
+        <th className="px-2 py-1 font-medium text-sm text-white/50">Ask</th>
         </tr>
       </thead>
       <tbody>

@@ -2,13 +2,12 @@ import axios from "axios"
 import { useEffect, useRef, useState } from "react"
 import { useWsStore } from "../utils/wsstore"
 
-export function MakeOrder(){
+export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance}){
 
     const latestTrade = useWsStore((state)=>state.latestTrade)
     const [trades,setTrades] = useState({})
     const [orders,setOrders] = useState(null)
-    const [balance, setBalance] = useState(0)
-    const [firstBalance,setFirstBalance] = useState(0)
+    
 
     const totalPNL = useRef(0)
 
@@ -80,12 +79,11 @@ export function MakeOrder(){
 
 
 
-    return <div className="h-[300px] w-full border border-black rounded-2xl" >
-        <div>Balance: {balance.toFixed(2)} </div>
+    return <div className="h-[300px] w-full " >
         <table className="table-auto">
         <thead>
 
-        <tr className="" > <th className="px-4 py-2">Symbol</th> <th className="px-4 py-2">Type</th> <th className="px-4 py-2">qty</th> <th className="px-4 py-2">Open price</th> <th className="px-4 py-2">Current Price</th> <th className="px-4 py-2">P/L</th></tr>
+        <tr className="" > <th className="px-4 py-2 font-medium text-sm text-white/50">Symbol</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Type</th> <th className="px-4 py-2 font-medium text-sm text-white/50">qty</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Open price</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Current Price</th> <th className="px-4 py-2 font-medium text-sm text-white/50">P/L</th></tr>
         </thead>
         <tbody>
         {
