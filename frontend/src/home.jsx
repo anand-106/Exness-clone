@@ -5,17 +5,64 @@ import { MakeOrder } from "./components/makeOrder"
 import ExnessLogo from './assets/exness_logo.png'
 
 import { LOGOS } from "./components/logos"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { SellAndBuy } from "./components/buyAndSell"
 
 
 export function Home(){
+
+  const [latestTrade,setLatestTarde] = useState(null)
+
+  useEffect(()=>{
+    if(!latestTrade) return;
+    const data = JSON.parse(latestTrade)
+
+    setTrades(prev=>{
+        return {...prev,[data.symbol]:{price:data.price,askPrice:data.askPrice,bidPrice:data.bidPrice,time:data.trade_time}}
+    })
+
+    
+    
+    
+},[latestTrade])
+
+
 
   const [selectedAsset,setSelectedAsset] = useState("SOLUSDT")
   const [balance, setBalance] = useState(0)
     const [firstBalance,setFirstBalance] = useState(0)
     const [orders,setOrders] = useState(null)
     const [trades,setTrades] = useState({})
+
+    
+
+        useEffect(()=>{
+
+          const ws = new WebSocket("ws://localhost:8080")
+
+          ws.onopen = ()=>{
+            console.log("websocket connected")
+        }
+
+        ws.onclose = ()=>{
+            console.log("websocket disconnected")
+        }
+
+        ws.onmessage= (event) =>{
+            const msg = event.data
+            setLatestTarde(msg)
+        }
+
+        ws.onerror = (err)=>{
+          if(ws){
+            ws.close()
+            console.log(err)
+          }
+        }
+
+
+        },[])
+    
 
     return (
         <div className=" w-full h-screen bg-[#141d22] text-white">
@@ -52,11 +99,11 @@ export function Home(){
           </div>
           <div className=" flex h-full w-full"  >
     
-          <AskBid />
+          <AskBid latestTrade={latestTrade} />
           <div className="">
 
           <CandleChart symbolValue={selectedAsset} trades={trades} />
-          <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance} setOrders={setOrders} orders={orders} />
+          <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance} setOrders={setOrders} orders={orders} latestTrade={latestTrade} />
           </div>
           <SellAndBuy selectedAsset={selectedAsset} setOrders={setOrders} setTrades={setTrades} trades={trades} />
           </div>

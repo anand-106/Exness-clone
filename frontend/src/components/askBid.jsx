@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
-import { useWsStore } from "../utils/wsstore";
+// import { useWsStore } from "../utils/wsstore";
 import { LOGOS } from "./logos";
 
-export function AskBid() {
+export function AskBid({latestTrade}) {
   const [trades,setTrades] = useState({})
 
 
-  const latestTrade = useWsStore((state)=>state.latestTrade)
-  const connect  = useWsStore((state)=>state.connect)
+  // const latestTrade = useWsStore((state)=>state.latestTrade)
+  // const connect  = useWsStore((state)=>state.connect)
 
-  useEffect(()=>{
-    const ws = connect();
-    return ()=>{
-      if (ws) ws.close()
-    }
-  },[])
+  // useEffect(()=>{
+  //   const ws = connect();
+  //   return ()=>{
+  //     if (ws) ws.close()
+  //   }
+  // },[])
 
 
   useEffect(() => {

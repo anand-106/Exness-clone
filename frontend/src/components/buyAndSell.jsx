@@ -1,30 +1,18 @@
-import { useEffect, useState } from "react";
-import { useWsStore } from "../utils/wsstore"
+import { useState } from "react";
 import { LOGOS } from "./logos";
 import axios from "axios";
 
 
-export function SellAndBuy({selectedAsset,setOrders,trades,setTrades}){
+export function SellAndBuy({selectedAsset,setOrders,trades}){
 
-    const latestTrade = useWsStore(state=>state.latestTrade)
+    
     // const selectedAsset = useSelectedAsset(state=>state.selectedAsset)
     
     const [margin,setMargin] = useState("")
     const [leverage,setLeverage] = useState("")
     const [selectedType,setSelectedType]= useState(null)
 
-    useEffect(()=>{
-        if(!latestTrade) return;
-        const data = JSON.parse(latestTrade)
-
-        setTrades(prev=>{
-            return {...prev,[data.symbol]:{price:data.price,askPrice:data.askPrice,bidPrice:data.bidPrice,time:data.trade_time}}
-        })
-
-        
-        
-        
-    },[latestTrade])
+    
 
     const handleOrder = ()=>{
         axios.post('http://localhost:3000/order/open',{
