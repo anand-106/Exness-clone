@@ -124,6 +124,7 @@ export default function CandleChart({symbolValue,trades}) {
       <select
         value={intervalValue}
         onChange={(e) => {setIntervalValue(e.target.value)}}
+        className='outline-0'
       >
         <option value="trades_1m">1 min</option>
         <option value="trades_5m">5 min</option>

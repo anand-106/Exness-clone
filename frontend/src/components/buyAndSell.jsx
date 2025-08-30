@@ -48,6 +48,9 @@ export function SellAndBuy({selectedAsset,setOrders,trades,setTrades}){
                 console.error(err)
             })
 
+            setMargin("")
+            setLeverage("")
+
 
         }).catch(err=>{
             console.error(err)

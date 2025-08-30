@@ -78,23 +78,37 @@ export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance,order
     },[])
 
 
+    const closeOrder = (id)=>{
+        axios.post('http://localhost:3000/order/close',{
+            id
+        },{
+            headers:{
+                Authorization:`Bearer ${localStorage.getItem("token")}`
+            }
+        }).then(res=>{
+           setOrders(orders=>orders.filter(order=>order && order.id !== id))
+            console.log(res)
+           
+        }).catch(err=>{
+            console.error(err)
+        })
+    }
+
+
 
     return <div className="h-[300px] w-full " >
         <table className="table-auto">
         <thead>
 
-        <tr className="" > <th className="px-4 py-2 font-medium text-sm text-white/50">Symbol</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Type</th> <th className="px-4 py-2 font-medium text-sm text-white/50">qty</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Open price</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Current Price</th> <th className="px-4 py-2 font-medium text-sm text-white/50">P/L</th></tr>
+        <tr className="" > <th className="px-4 py-2 font-medium text-sm text-white/50">Symbol</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Type</th> <th className="px-4 py-2 font-medium text-sm text-white/50">qty</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Open price</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Current Price</th> <th className="px-4 py-2 font-medium text-sm text-white/50">P/L</th> <th className="px-4 py-2 font-medium text-sm text-white/50">Action</th></tr>
         </thead>
         <tbody>
         {
-            orders && (
-                orders.map((order)=>(
-                    order.status == "open"&&
-                    (<tr className="">
-                         <td className="px-4 py-2">{order.asset}</td> <td className="px-4 py-2">{order.type}</td> <td className="px-4 py-2">{order.qty}</td> <td className="px-4 py-2">{order.price}</td> <td className="px-4 py-2">{trades[order.asset]?.price}</td> <td className="px-4 py-2">{order.pnl.toFixed(2)}</td>
-                    </tr>)
-                ))
-            )
+          orders &&  (orders.filter(order=>order && order.status === "open").map(order=>(
+                <tr className="" key={order.id}>
+                         <td className="px-4 py-2">{order.asset}</td> <td className="px-4 py-2">{order.type}</td> <td className="px-4 py-2">{order.qty}</td> <td className="px-4 py-2">{order.price}</td> <td className="px-4 py-2">{trades[order.asset]?.price}</td> <td className="px-4 py-2">{order.pnl.toFixed(2)}</td><td className="px-2 py-1"><button className="w-full h-full p-1 bg-white/30 rounded-md flex justify-center items-center cursor-pointer text-sm" onClick={()=>{closeOrder(order.id)}} >Close</button></td>
+                    </tr>
+            )))
         }
         </tbody>
         </table>
