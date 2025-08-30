@@ -30,8 +30,8 @@ export function SellAndBuy({selectedAsset,setOrders,trades,setTrades}){
         axios.post('http://localhost:3000/order/open',{
             type:selectedType,
             asset:selectedAsset,
-            qty:margin,
-            leverage:leverage
+            margin:parseFloat(margin),
+            leverage:parseFloat(leverage)
         },{
             headers:{
                 Authorization:`Bearer ${localStorage.getItem("token")}`

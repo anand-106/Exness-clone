@@ -2,9 +2,11 @@ import express from 'express';
 import cors from 'cors'
 import {verifyJwt} from './jwt'
 import {Redis} from 'ioredis'
+import { v4 as uuidv4 } from 'uuid';
 
 import jwt from 'jsonwebtoken';
 import { channel } from 'diagnostics_channel';
+import { error } from 'console';
 
 const app =express()
 const PORT  =3000
@@ -76,6 +78,7 @@ client.on("message",(channel,message)=>{
 
 
 interface User {
+    username:string;
     password: string;
     balance:  { 
         USD: number; 
@@ -87,7 +90,7 @@ interface User {
 
 
   interface Order {
-    username:string;
+    userId:string;
     type : "buy" | "sell";
     asset:string;
     price:number;
@@ -102,7 +105,7 @@ interface User {
   }
   
 
-const users: Record<string, User> = { anand: { password: '12345678', balance: { USD :5000 ,equity:5000,marginUsed:0 ,usableBalance:5000 }} };
+const users: Record<string, User> = { 123456789: {username : "anand", password: '12345678', balance: { USD :5000 ,equity:5000,marginUsed:0 ,usableBalance:5000 }} };
 
 const orders : Record<string,Order>={}
 
@@ -110,14 +113,17 @@ app.get('/',(req,res)=>{
     res.json({message:"hello world"})
 })
 
-app.post('/signup',async (req,res)=>{
+app.post('/api/v1/user/signup',async (req,res)=>{
     const {username , password } = req.body;
 
     if(users[username]){
-        return res.status(400).json({message:"user already exists"})
+        return res.status(403).json({message:"Error while signing up"})
     }
 
-    users[username] = {
+    const id = uuidv4()
+
+    users[id] = {
+        username:username,
         password,
         balance: {
             USD: 5000,
@@ -127,21 +133,23 @@ app.post('/signup',async (req,res)=>{
         },
     };
 
-    res.json({message:"User Created Successfully"})
+    res.json({userId: id})
 })
 
-app.post('/signin',async (req,res)=>{
+app.post('/api/v1/user/signin',async (req,res)=>{
     const {username , password } = req.body;
 
-    if(!users[username]){
-        return res.status(400).json({message:"username not found"})
+    const user  = Object.entries(users).filter(([userId,user])=>user.username == username)[0]
+
+    if(!user){
+        return res.status(403).json({message: "Incorrect credentials"})
     }
 
-    if(users[username].password !== password){
-        return res.json({message:"password incorrect"})
-    }
+    const userId = user[0]
 
-    const token = jwt.sign({username}, JWT_SECRET)
+    console.log(userId)
+
+    const token = jwt.sign({userId}, JWT_SECRET)
     
     res.json({token})
 })
@@ -149,8 +157,9 @@ app.post('/signin',async (req,res)=>{
 app.use(verifyJwt)
 
 app.get('/balance',async (req,res)=>{
-    const username = (req as any).username
-    const user = users[username];
+    const userId = (req as any).userId
+   
+    const user = users[userId];
     
     if(!user) {
         return res.status(404).json({message: "User not found"});
@@ -160,61 +169,67 @@ app.get('/balance',async (req,res)=>{
 })
 
 app.get('/orders',(req,res)=>{
-    const username = (req as any).username
+    const userId = (req as any).userId
     
-    const activeOrders = Object.entries(orders).filter(([id,order])=>order.username==username).map(([id,order])=>({id,...order}))
+    const activeOrders = Object.entries(orders).filter(([id,order])=>order.userId==userId).map(([id,order])=>({id,...order}))
 
     res.json({orders:activeOrders})
 })
 
 app.post("/order/open", (req,res)=>{
 
-    const {type,qty,asset,leverage,stopLoss,takeProfit } = req.body;
+    try{
 
-    const username  =  (req as any).username
-
-    const user = users[username];
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-   
-
-    const price=LatestPrices[asset]
-    const margin = price!*parseFloat(qty)/parseInt(leverage)
-
-    if(margin>user.balance.usableBalance){
-        return res.status(400).json({message: "insufficient funds"})
+        
+        const {type,margin,asset,leverage,stopLoss,takeProfit } = req.body;
+        
+        const userId  =  (req as any).userId
+        
+        const user = users[userId];
+        if (!user) return res.status(404).json({ message: "User not found" });
+        
+        
+        
+        const price=LatestPrices[asset]
+        const qty = (parseInt(leverage)*parseFloat(margin))/price!
+        
+        if(margin>user.balance.usableBalance){
+            return res.status(400).json({message: "insufficient funds"})
+        }
+        user.balance.usableBalance -= margin;
+        
+        user.balance.marginUsed += margin
+        
+        const id  = Date.now().toString()
+        
+        orders[id]= {
+            userId:userId,
+            type:type,
+            asset:asset,
+            price:price!,
+            qty:qty,
+            leverage:leverage,
+            margin:margin,
+            position:0,
+            status:"open",
+            pnl:0,
+            takeProfit:takeProfit,
+            stopLoss:stopLoss
+        }
+        
+        res.json({ message: "Order opened", order: orders[id],balance:user.balance});
+    }catch(err){
+        res.status(500).json({error:err})
     }
-    user.balance.usableBalance -= margin;
-
-    user.balance.marginUsed += margin
-
-    const id  = Date.now().toString()
-
-    orders[id]= {
-        username:username,
-        type:type,
-        asset:asset,
-        price:price!,
-        qty:qty,
-        leverage:leverage,
-        margin:margin,
-        position:0,
-        status:"open",
-        pnl:0,
-        takeProfit:takeProfit,
-        stopLoss:stopLoss
-    }
-  
-    res.json({ message: "Order opened", order: orders[id],balance:user.balance});
 
 })
 
 app.post('/order/close',(req,res)=>{
         const {id} = req.body
 
-        const username  =  (req as any).username
+        const userId  =  (req as any).userId
 
-        const user = users[username];
+        const user = users[userId];
         if (!user) return res.status(404).json({ message: "User not found" });
 
         
@@ -268,7 +283,7 @@ const order  = orders[id]
             return
         }
 
-        const user  = users[order.username]
+        const user  = users[order.userId]
 
         if(!user) return
 

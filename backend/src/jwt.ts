@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
 interface JwtPayload {
-  username: string;
+  userId: string;
 }
 
 const JWT_SECRET = "anand"
@@ -19,8 +19,9 @@ export function verifyJwt(req: Request, res: Response, next: NextFunction) {
     
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
+
   
-    (req as any).username = payload.username;
+    (req as any).userId = payload.userId;
 
     next();
   } catch (err) {

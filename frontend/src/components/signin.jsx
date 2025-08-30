@@ -10,7 +10,7 @@ export function Signin(){
     const navigate  = useNavigate();
 
     const handleSignIn  =()=>{
-        axios.post("http://localhost:3000/signin",{
+        axios.post("http://localhost:3000/api/v1/user/signin",{
             username,
             password
         }).then(res=>{
