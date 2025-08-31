@@ -5,6 +5,8 @@ export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance,order
 
     
     const [trades,setTrades] = useState({})
+    const [showOrderStatus,setShowOrderStatus] = useState(false)
+    const [orderStatus,setOrderStatus] = useState({})
    
     
 
@@ -74,6 +76,44 @@ export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance,order
         }).catch(err=>{
             console.error(err)
         })
+
+        try{
+
+            
+            const eventSource = new EventSource(`http://localhost:3000/events/123456789`)
+            
+            eventSource.onmessage = (event)=>{const data = JSON.parse(event.data)
+                
+            if(data.type=="ORDER_UPDATE"){
+                // if(data.status == "liquidated"){
+
+                    setOrders(orders=>orders.filter(order=>order && order.id !== data.orderId))
+                    setOrderStatus({
+                        asset: data.asset,
+                        status:data.status,
+                        pnl:data.pnl,
+                    })
+                    setShowOrderStatus(true)
+                    setTimeout(()=>{
+                        setShowOrderStatus(false)
+                    },4000)
+                // }
+            }
+            
+            eventSource.onerror = (error) => {
+                console.error("SSE error:", error);
+                console.log("SSE readyState:", eventSource.readyState);
+                
+                
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    console.log("SSE connection closed permanently");
+                }
+            };
+        }
+        }catch(err){
+            console.error(err)
+        }
+
     },[])
 
 
@@ -95,7 +135,7 @@ export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance,order
 
 
 
-    return <div className="h-[300px] w-full " >
+    return <div className="h-[300px] w-full relative">
         <table className="table-auto">
         <thead>
 
@@ -111,5 +151,16 @@ export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance,order
         }
         </tbody>
         </table>
+        {
+            showOrderStatus&&
+        (<div className="absolute bottom-25 w-full flex justify-center items-center">
+            <OrderStatus orderStatus={orderStatus} />
+        </div>)}
+    </div>
+}
+
+function OrderStatus({orderStatus}){
+    return <div className="h-16 w-[400px] bg-white/10 border border-white/50 rounded-md transition-all duration-300 ease-out flex items-center p-5">
+        <h1>{`The Order for ${orderStatus.asset} is ${orderStatus.status} at ${orderStatus.pnl}`}</h1>
     </div>
 }

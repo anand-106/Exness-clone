@@ -10,6 +10,8 @@ export function SellAndBuy({selectedAsset,setOrders,trades}){
     
     const [margin,setMargin] = useState("")
     const [leverage,setLeverage] = useState("")
+    const [stopLoss,setStopLoss] = useState(null)
+    const [takeProfit,setTakeProfit] = useState(null)
     const [selectedType,setSelectedType]= useState(null)
 
     
@@ -19,7 +21,9 @@ export function SellAndBuy({selectedAsset,setOrders,trades}){
             type:selectedType,
             asset:selectedAsset,
             margin:parseFloat(margin),
-            leverage:parseFloat(leverage)
+            leverage:parseFloat(leverage),
+            stopLoss:parseFloat(takeProfit),
+            takeProfit:parseFloat(takeProfit)
         },{
             headers:{
                 Authorization:`Bearer ${localStorage.getItem("token")}`
@@ -38,6 +42,7 @@ export function SellAndBuy({selectedAsset,setOrders,trades}){
 
             setMargin("")
             setLeverage("")
+            setSelectedType(null)
 
 
         }).catch(err=>{
@@ -71,8 +76,16 @@ export function SellAndBuy({selectedAsset,setOrders,trades}){
              value={margin} onChange={(e)=>{setMargin(e.target.value)}} placeholder="Not Set" />
              <h1 className="text-white/80 text-base">Leverage</h1>
             <input
-            className="outline-0 border border-white/30 pl-2 h-10 w-full rounded-md"
+            className="outline-0 border border-white/30 pl-2 h-10 w-full rounded-md mb-4"
              value={leverage} onChange={(e)=>{setLeverage(e.target.value)}} placeholder="Not Set" />
+             <h1 className="text-white/80 text-base">Stop Loss</h1>
+            <input
+            className="outline-0 border border-white/30 pl-2 h-10 w-full rounded-md mb-4"
+             value={stopLoss} onChange={(e)=>{setStopLoss(e.target.value)}} placeholder="Not Set" />
+            <h1 className="text-white/80 text-base">Take Profit</h1>
+            <input
+            className="outline-0 border border-white/30 pl-2 h-10 w-full rounded-md"
+             value={takeProfit} onChange={(e)=>{setTakeProfit(e.target.value)}} placeholder="Not Set" />
         </div>
         {
 

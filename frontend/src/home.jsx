@@ -65,7 +65,7 @@ export function Home(){
     
 
     return (
-        <div className=" w-full h-screen bg-[#141d22] text-white">
+        <div className=" w-full h-screen bg-[#141d22] text-white overflow-hidden">
           <div className="flex h-18 items-center px-2 ">
           <div className="w-[200px]">
 
@@ -98,14 +98,16 @@ export function Home(){
           </div>
           </div>
           <div className=" flex h-full w-full"  >
-    
+    <div className="flex h-[calc(100vh-72px)]">
+
           <AskBid latestTrade={latestTrade} />
-          <div className="">
+          <div className="flex-1">
 
           <CandleChart symbolValue={selectedAsset} trades={trades} />
           <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance} setOrders={setOrders} orders={orders} latestTrade={latestTrade} />
           </div>
           <SellAndBuy selectedAsset={selectedAsset} setOrders={setOrders} setTrades={setTrades} trades={trades} />
+    </div>
           </div>
         </div>
       )

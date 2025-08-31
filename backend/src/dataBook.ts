@@ -154,6 +154,30 @@ app.post('/api/v1/user/signin',async (req,res)=>{
     res.json({token})
 })
 
+const userSSEConnections :Record<string,any> = {}
+
+app.get('/events/:userId',(req,res)=>{
+    const {userId}  =  req.params
+
+    res.writeHead(200,{
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+    "Access-Control-Allow-Origin": "*",
+    })
+
+    userSSEConnections[userId] = res
+
+    res.write(`data: ${JSON.stringify({type:"CONNECTED",userId})}\n\n`)
+    console.log(`User ${userId} connected to SSE`);
+
+    res.on("close",()=>{
+        delete userSSEConnections[userId]
+        console.log(`User ${userId} disconnected from SSE`);
+    })
+
+})
+
 app.use(verifyJwt)
 
 app.get('/balance',async (req,res)=>{
@@ -264,6 +288,8 @@ app.post('/order/close',(req,res)=>{
 
 })
 
+
+
 app.listen(PORT,()=>{
     console.log(`User Server running on ${PORT}`)
 })
@@ -301,6 +327,21 @@ const order  = orders[id]
         user.balance.usableBalance = user.balance.USD - user.balance.marginUsed
 
         order.status = status
+
+        const sse = userSSEConnections[order.userId]
+
+        if(sse){
+            const orderUpdate = {
+                type:"ORDER_UPDATE",
+                asset:order.asset,
+                orderId: id,
+                status:status,
+                pnl:pnl
+            }
+
+            sse.write(`data: ${JSON.stringify(orderUpdate)}\n\n`)
+            console.log(`Sent SSE to user ${order.userId}:`, orderUpdate);
+        }
 
 }
 

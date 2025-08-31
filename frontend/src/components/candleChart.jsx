@@ -20,7 +20,7 @@ export default function CandleChart({symbolValue,trades}) {
     }
 
     const chart = createChart(chartContainerRef.current, {
-      width: 760,
+      width: 900,
       height: 400,
       layout: {
         background: { type: 'solid', color: '#141d22' },
@@ -119,7 +119,7 @@ export default function CandleChart({symbolValue,trades}) {
     }
   }, [trades, symbolValue, intervalValue])
 
-  return <div className='p-1 bg-[#3f474a] mt-1 w-[770px]'>
+  return <div className='p-1 bg-[#3f474a] mt-1 w-[930px]'>
     <div className="bg-[#141d22] rounded-md w-full">
       <select
         value={intervalValue}
