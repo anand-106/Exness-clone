@@ -5,21 +5,80 @@ import { MakeOrder } from "./components/makeOrder"
 import ExnessLogo from './assets/exness_logo.png'
 
 import { LOGOS } from "./components/logos"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { SellAndBuy } from "./components/buyAndSell"
 
 
 export function Home(){
 
   const [latestTrade,setLatestTarde] = useState(null)
+  const totalPNL = useRef(0)
 
 
   useEffect(()=>{
     if(!latestTrade) return;
     const data = JSON.parse(latestTrade)
+    const price = parseFloat(data.price);
+      const askPrice = parseFloat(data.askPrice);
+      const bidPrice = parseFloat(data.bidPrice);
+      const symbol = data.symbol
+      const time = data.trade_time
+
 
     setTrades(prev=>{
-        return {...prev,[data.symbol]:{price:data.price,askPrice:data.askPrice,bidPrice:data.bidPrice,time:data.trade_time}}
+
+      const prevTrade = prev[symbol] || { prevPrice: 0, bid: 0, ask: 0, bidColor: "", askColor: "" };
+
+        let bidColor = "";
+        let askColor = "";
+
+        if(price>prevTrade.prevPrice)
+        {
+            bidColor="bg-green-500 text-black";
+            askColor = "bg-green-500 text-black";
+        }
+        else if(price==prevTrade.prevPrice){
+          bidColor="";
+            askColor = "";
+        }
+        else{
+            bidColor="bg-red-500";
+            askColor = "bg-red-500";
+        }
+
+        if(!orders) return;
+
+        // console.log(trades)
+        
+        orders.map((order)=>{
+            if(trades[order.asset] && order.status == "open"){
+
+                const startPrice = order.price*order.qty
+
+                if(order.type=="buy")
+                {
+                    const currentPNL =  trades[order.asset]?.price*order.qty - startPrice
+                    order.pnl = currentPNL
+                    totalPNL.current += currentPNL
+                }
+                else{
+                    const currentPNL =    startPrice - trades[order.asset]?.price*order.qty
+                    order.pnl = currentPNL
+                    totalPNL.current += currentPNL
+                }
+                
+                
+
+            }
+        })
+        
+        setBalance(firstBalance+totalPNL.current)
+        totalPNL.current =0
+
+        return {
+          ...prev,
+          [symbol]:{prevPrice:price,price:price,bidPrice:bidPrice,askPrice:askPrice,bidColor:bidColor,askColor:askColor,time:time}
+      };
     })
 
     
@@ -103,11 +162,11 @@ export function Home(){
           <div className=" flex h-full w-full"  >
     <div className="flex h-[calc(100vh-72px)]">
 
-          <AskBid latestTrade={latestTrade} />
+          <AskBid trades={trades} />
           <div className="flex-1">
 
           <CandleChart symbolValue={selectedAsset} trades={trades}   />
-          <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance} setOrders={setOrders} orders={orders} latestTrade={latestTrade} />
+          <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance} setOrders={setOrders} orders={orders} trades={trades}  />
           </div>
           <SellAndBuy selectedAsset={selectedAsset} setOrders={setOrders} setTrades={setTrades} trades={trades} takeProfit={takeProfit} setStopLoss={setStopLoss} setTakeProfit={setTakeProfit} stopLoss={stopLoss} />
     </div>

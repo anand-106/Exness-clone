@@ -1,55 +1,50 @@
 import axios from "axios"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
-export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance,orders,setOrders,latestTrade}){
+export function MakeOrder({setBalance,balance,setFirstBalance,orders,setOrders,trades}){
 
     
-    const [trades,setTrades] = useState({})
+    
     const [showOrderStatus,setShowOrderStatus] = useState(false)
     const [orderStatus,setOrderStatus] = useState({})
    
     
 
-    const totalPNL = useRef(0)
+    // const totalPNL = useRef(0)
 
-    useEffect(()=>{
-        if(!latestTrade) return;
-        const data = JSON.parse(latestTrade)
-
-        setTrades(prev=>{
-            return {...prev,[data.symbol]:{price:data.price}}
-        })
-
-        if(!orders) return;
-
-        // console.log(trades)
+    // useEffect(()=>{
         
-        orders.map((order)=>{
-            if(trades[order.asset] && order.status == "open"){
 
-                const startPrice = order.price*order.qty
+    //     if(!orders) return;
 
-                if(order.type=="buy")
-                {
-                    const currentPNL =  trades[order.asset]?.price*order.qty - startPrice
-                    order.pnl = currentPNL
-                    totalPNL.current += currentPNL
-                }
-                else{
-                    const currentPNL =    startPrice - trades[order.asset]?.price*order.qty
-                    order.pnl = currentPNL
-                    totalPNL.current += currentPNL
-                }
+    //     // console.log(trades)
+        
+    //     orders.map((order)=>{
+    //         if(trades[order.asset] && order.status == "open"){
+
+    //             const startPrice = order.price*order.qty
+
+    //             if(order.type=="buy")
+    //             {
+    //                 const currentPNL =  trades[order.asset]?.price*order.qty - startPrice
+    //                 order.pnl = currentPNL
+    //                 totalPNL.current += currentPNL
+    //             }
+    //             else{
+    //                 const currentPNL =    startPrice - trades[order.asset]?.price*order.qty
+    //                 order.pnl = currentPNL
+    //                 totalPNL.current += currentPNL
+    //             }
                 
                 
 
-            }
-        })
+    //         }
+    //     })
         
-        setBalance(firstBalance+totalPNL.current)
-        totalPNL.current =0
-        // console.log(trades)
-    },[latestTrade,orders])
+    //     setBalance(firstBalance+totalPNL.current)
+    //     totalPNL.current =0
+    //     // console.log(trades)
+    // },[latestTrade,orders])
 
     useEffect(()=>{
         axios.get('http://localhost:3000/balance',{
