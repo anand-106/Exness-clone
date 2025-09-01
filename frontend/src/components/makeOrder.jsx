@@ -80,7 +80,7 @@ export function MakeOrder({setBalance,balance,firstBalance,setFirstBalance,order
         try{
 
             
-            const eventSource = new EventSource(`http://localhost:3000/events/123456789`)
+            const eventSource = new EventSource(`http://localhost:3000/events/?jwt=${localStorage.getItem('token')}`)
             
             eventSource.onmessage = (event)=>{const data = JSON.parse(event.data)
                 

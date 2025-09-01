@@ -3,15 +3,14 @@ import { LOGOS } from "./logos";
 import axios from "axios";
 
 
-export function SellAndBuy({selectedAsset,setOrders,trades}){
+export function SellAndBuy({selectedAsset,setOrders,trades,stopLoss,setStopLoss,takeProfit,setTakeProfit}){
 
     
     // const selectedAsset = useSelectedAsset(state=>state.selectedAsset)
     
     const [margin,setMargin] = useState("")
     const [leverage,setLeverage] = useState("")
-    const [stopLoss,setStopLoss] = useState(null)
-    const [takeProfit,setTakeProfit] = useState(null)
+    
     const [selectedType,setSelectedType]= useState(null)
 
     
@@ -22,7 +21,7 @@ export function SellAndBuy({selectedAsset,setOrders,trades}){
             asset:selectedAsset,
             margin:parseFloat(margin),
             leverage:parseFloat(leverage),
-            stopLoss:parseFloat(takeProfit),
+            stopLoss:parseFloat(stopLoss),
             takeProfit:parseFloat(takeProfit)
         },{
             headers:{
@@ -43,6 +42,7 @@ export function SellAndBuy({selectedAsset,setOrders,trades}){
             setMargin("")
             setLeverage("")
             setSelectedType(null)
+          
 
 
         }).catch(err=>{

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, CandlestickSeries } from 'lightweight-charts';
+import { createChart, CandlestickSeries,LineSeries } from 'lightweight-charts';
 import axios from 'axios';
 
 export default function CandleChart({symbolValue,trades}) {
@@ -12,14 +12,15 @@ export default function CandleChart({symbolValue,trades}) {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-
-    if (chartRef.current) {
-      chartRef.current.remove();
-      chartRef.current = null;
-      candleSeries.current = null;
-    }
-
-    const chart = createChart(chartContainerRef.current, {
+try{
+  
+  if (chartRef.current) {
+    chartRef.current.remove();
+    chartRef.current = null;
+    candleSeries.current = null;
+  }
+  
+  const chart = createChart(chartContainerRef.current, {
       width: 900,
       height: 400,
       layout: {
@@ -47,7 +48,9 @@ export default function CandleChart({symbolValue,trades}) {
       },
     });
 
-    chartRef.current = chart;
+    
+    
+    chartRef.current  = chart;
     candleSeries.current = chart.addSeries(CandlestickSeries, {
       upColor: '#26a69a',
       downColor: '#ef5350',
@@ -55,26 +58,33 @@ export default function CandleChart({symbolValue,trades}) {
       wickUpColor: '#26a69a',
       wickDownColor: '#ef5350',
     });
-
-   
-    currentCandle.current = null;
-
     
-    axios.get(`http://localhost:4000/candles?symbol=${symbolValue}&limit=100&interval=${intervalValue}`)
-      .then(res => {
+    
+
+  
+  
+  
+  currentCandle.current = null;
+  
+  
+  axios.get(`http://localhost:4000/candles?symbol=${symbolValue}&limit=100&interval=${intervalValue}`)
+  .then(res => {
         
-        if (res.data && Array.isArray(res.data) && candleSeries.current) {
-          candleSeries.current.setData(res.data);
-          chart.timeScale().fitContent();
-        } else {
-          console.warn('Invalid candle data received:', res.data);
+    if (res.data && Array.isArray(res.data) && candleSeries.current) {
+      candleSeries.current.setData(res.data);
+      chart.timeScale().fitContent();
+    } else {
+      console.warn('Invalid candle data received:', res.data);
         }
       })
       .catch(err => {
         console.error('Error loading candle data:', err);
-       
+        
       });
-
+      
+    }catch(err){
+      console.error(err)
+    }
     return () => {
       if (chartRef.current) {
         chartRef.current.remove();
@@ -124,9 +134,9 @@ export default function CandleChart({symbolValue,trades}) {
       <select
         value={intervalValue}
         onChange={(e) => {setIntervalValue(e.target.value)}}
-        className='outline-0'
+        className='outline-0 bg-[#141d22]'
       >
-        <option value="trades_1m">1 min</option>
+        <option  value="trades_1m">1 min</option>
         <option value="trades_5m">5 min</option>
         <option value="trades_15m">15 min</option>
       </select>

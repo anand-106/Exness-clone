@@ -13,6 +13,7 @@ export function Home(){
 
   const [latestTrade,setLatestTarde] = useState(null)
 
+
   useEffect(()=>{
     if(!latestTrade) return;
     const data = JSON.parse(latestTrade)
@@ -33,6 +34,8 @@ export function Home(){
     const [firstBalance,setFirstBalance] = useState(0)
     const [orders,setOrders] = useState(null)
     const [trades,setTrades] = useState({})
+    const [stopLoss,setStopLoss] = useState(null)
+    const [takeProfit,setTakeProfit] = useState(null)
 
     
 
@@ -103,10 +106,10 @@ export function Home(){
           <AskBid latestTrade={latestTrade} />
           <div className="flex-1">
 
-          <CandleChart symbolValue={selectedAsset} trades={trades} />
+          <CandleChart symbolValue={selectedAsset} trades={trades}   />
           <MakeOrder setBalance={setBalance} balance={balance} setFirstBalance={setFirstBalance} firstBalance={firstBalance} setOrders={setOrders} orders={orders} latestTrade={latestTrade} />
           </div>
-          <SellAndBuy selectedAsset={selectedAsset} setOrders={setOrders} setTrades={setTrades} trades={trades} />
+          <SellAndBuy selectedAsset={selectedAsset} setOrders={setOrders} setTrades={setTrades} trades={trades} takeProfit={takeProfit} setStopLoss={setStopLoss} setTakeProfit={setTakeProfit} stopLoss={stopLoss} />
     </div>
           </div>
         </div>

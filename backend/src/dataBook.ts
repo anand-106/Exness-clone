@@ -156,15 +156,34 @@ app.post('/api/v1/user/signin',async (req,res)=>{
 
 const userSSEConnections :Record<string,any> = {}
 
-app.get('/events/:userId',(req,res)=>{
-    const {userId}  =  req.params
+app.get('/events',(req,res)=>{
+    const jwtToken = req.query.jwt as string
+
+    let userId:string;
+    
+    // Verify JWT from query parameter
+    if (jwtToken) {
+        try {
+            const payload = jwt.verify(jwtToken, JWT_SECRET) as any;
+            if (!payload.userId) {
+                return res.status(401).json({ error: "Unauthorized" });
+            }
+            userId = payload.userId
+        } catch (err) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+    } else {
+        return res.status(401).json({ error: "No token provided" });
+    }
 
     res.writeHead(200,{
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    "Connection": "keep-alive",
-    "Access-Control-Allow-Origin": "*",
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache", 
+        "Connection": "keep-alive",
+        "Access-Control-Allow-Origin": "*",
     })
+
+    
 
     userSSEConnections[userId] = res
 
@@ -175,7 +194,6 @@ app.get('/events/:userId',(req,res)=>{
         delete userSSEConnections[userId]
         console.log(`User ${userId} disconnected from SSE`);
     })
-
 })
 
 app.use(verifyJwt)
@@ -319,6 +337,7 @@ const order  = orders[id]
        else{
            pnl = order.price*order.qty - (LatestPrices[order.asset]|| 0)*order.qty
        }
+
 
        user.balance.USD += pnl
 
