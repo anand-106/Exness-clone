@@ -1,31 +1,28 @@
 import express from 'express';
 import cors from 'cors'
 import {verifyJwt} from './jwt'
-import {Redis} from 'ioredis'
 import { v4 as uuidv4 } from 'uuid';
-
+import {Order,User} from './models/models'
 import jwt from 'jsonwebtoken';
-import { Pool } from 'pg';
+import { client } from './utils/redis'
+import { pool } from './utils/psql';
+import { closeOrder } from './services/closeOrder';
+import { openOrderQ,closeOrderQ,liquidateOrderQ } from './services/orderService';
+import './services/notificationWorker';
+
+
 
 const app =express()
-const PORT  =3000
-
-const JWT_SECRET = "anand"
-
 app.use(cors())
 app.use(express.json())
 
-const pool = new Pool(
-    {
-        user: "postgres",
-        host: "localhost",
-        database: "postgres",
-        password: "password",
-        port: 5433, 
-    }
-)
+const JWT_SECRET = "anand"
+const PORT  =3000
 
-const client = new Redis()
+export const LatestPrices :Record <string,number>={}
+export const users: Record<string, User> = { 123456789: {username : "anandkvlm2003@gmail.com", password: '12345678', balance: { USD :5000 ,equity:5000,marginUsed:0 ,usableBalance:5000 }} };
+export const orders : Record<string,Order>={}
+
 
 client.subscribe("trades",(err,count)=>{
     if(err){
@@ -36,7 +33,6 @@ client.subscribe("trades",(err,count)=>{
     }
 })
 
-const LatestPrices :Record <string,number>={}
 
 client.on("message",(channel,message)=>{
     if(channel=="trades"){
@@ -45,21 +41,24 @@ client.on("message",(channel,message)=>{
         LatestPrices[trade.symbol] = trade.price
 
         if(orders){
-            Object.entries(orders).forEach(([id,order])=>{
+            Object.entries(orders).forEach(async ([id,order])=>{
                 if(order.type=="buy" && order.status=="open"){
                     order.pnl = LatestPrices[order.asset]!*order.qty - order.price*order.qty;
                     order.position = LatestPrices[order.asset]!*order.qty;
                     if(-(order.pnl)>= (.9*order.margin))
                     {
                         closeOrder(id,"liquidated")
+                        await liquidateOrderQ(order,id,users[order.userId]!.username)
                         console.log("order liquidated with id ", id)
                     }
                     else if(order.stopLoss && order.stopLoss >= order.position){
                         closeOrder(id,"closed")
+                        await closeOrderQ(order,id,users[id]!.username)
                         console.log("order closed by stoploss with id ", id)
                     }
                     else if(order.takeProfit && order.position >= order.takeProfit) {
                         closeOrder(id,"closed")
+                        await closeOrderQ(order,id,users[id]!.username)
                         console.log("order closed by takeProfit with id ", id)
                     }
                 }
@@ -69,14 +68,17 @@ client.on("message",(channel,message)=>{
                     if(-(order.pnl)>= (.9*order.margin))
                     {
                         closeOrder(id,"liquidated")
+                        await liquidateOrderQ(order,id,users[id]!.username)
                         console.log("order liquidated with id ", id)
                     }
                     else if(order.stopLoss && order.position >= order.stopLoss ){
                         closeOrder(id,"closed")
+                        await closeOrderQ(order,id,users[id]!.username)
                         console.log("order closed by stoploss with id ", id)
                     }
                     else if(order.takeProfit && order.position <= order.takeProfit) {
                         closeOrder(id,"closed")
+                        await closeOrderQ(order,id,users[id]!.username)
                         console.log("order closed by takeProfit with id ", id)
                     }
                 }
@@ -85,38 +87,9 @@ client.on("message",(channel,message)=>{
     }
 })
 
-
-interface User {
-    username:string;
-    password: string;
-    balance:  { 
-        USD: number; 
-        equity:number;
-        marginUsed:number;
-        usableBalance:number; };
-    
-  }
-
-
-  interface Order {
-    userId:string;
-    type : "buy" | "sell";
-    asset:string;
-    price:number;
-    qty:number;
-    leverage:number;
-    margin:number;
-    position:number;
-    stopLoss?:number;
-    takeProfit?:number;
-    status: "open" | "closed" | "liquidated";
-    pnl?:number;
-  }
   
 
-const users: Record<string, User> = { 123456789: {username : "anand", password: '12345678', balance: { USD :5000 ,equity:5000,marginUsed:0 ,usableBalance:5000 }} };
 
-const orders : Record<string,Order>={}
 
 app.get('/',(req,res)=>{
     res.json({message:"hello world"})
@@ -163,7 +136,7 @@ app.post('/api/v1/user/signin',async (req,res)=>{
     res.json({token})
 })
 
-const userSSEConnections :Record<string,any> = {}
+export const userSSEConnections :Record<string,any> = {}
 
 app.get('/events',(req,res)=>{
     const jwtToken = req.query.jwt as string
@@ -349,55 +322,4 @@ app.listen(PORT,()=>{
     console.log(`User Server running on ${PORT}`)
 })
 
-
-function closeOrder(id:string,status:"open"|"closed"|"liquidated"){
-
-
-const order  = orders[id]
-
-        
-
-        let pnl = 0
-
-        if(!order) {
-            
-            return
-        }
-
-        const user  = users[order.userId]
-
-        if(!user) return
-
-        if(order.type=="buy"){
-            pnl =(LatestPrices[order.asset]|| 0)*order.qty - order.price*order.qty 
-       }
-       else{
-           pnl = order.price*order.qty - (LatestPrices[order.asset]|| 0)*order.qty
-       }
-
-
-       user.balance.USD += pnl
-
-        user.balance.marginUsed -= order.margin
-
-        user.balance.usableBalance = user.balance.USD - user.balance.marginUsed
-
-        order.status = status
-
-        const sse = userSSEConnections[order.userId]
-
-        if(sse){
-            const orderUpdate = {
-                type:"ORDER_UPDATE",
-                asset:order.asset,
-                orderId: id,
-                status:status,
-                pnl:pnl
-            }
-
-            sse.write(`data: ${JSON.stringify(orderUpdate)}\n\n`)
-            console.log(`Sent SSE to user ${order.userId}:`, orderUpdate);
-        }
-
-}
 
