@@ -67,7 +67,7 @@ try{
   currentCandle.current = null;
   
   
-  axios.get(`http://localhost:4000/candles?symbol=${symbolValue}&limit=100&interval=${intervalValue}`)
+  axios.get(`http://localhost:3000/candles?symbol=${symbolValue}&limit=100&interval=${intervalValue}`)
   .then(res => {
         
     if (res.data && Array.isArray(res.data) && candleSeries.current) {
