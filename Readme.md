@@ -1,16 +1,17 @@
-# <p align="center">Trading Platform</p>
+# <p align="center">Exness Trading Platform Clone</p>
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"></a>
-  <a href="#"><img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI"></a>
   <a href="#"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
-  <a href="#"><img src="https://img.shields.io/badge/WebSocket-000000?style=for-the-badge&logo=websocket&logoColor=white" alt="WebSocket"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Zustand-804CD9?style=for-the-badge&logoColor=white" alt="Zustand"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js"></a>
+  <a href="#"><img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"></a>
 </p>
 
 ## Introduction
 
-This project is a modern trading platform built with React and FastAPI, providing real-time market data, order management, and user authentication. It allows users to monitor assets, view candlestick charts, and execute buy/sell orders. The platform uses WebSockets for real-time updates and JWT for secure authentication.
+This project is a cryptocurrency trading platform clone inspired by Exness. It allows users to simulate trading SOL, BTC, and ETH with real-time price updates, order management features, and candlestick charts. This platform is designed for educational purposes, strategy testing, and portfolio building.
 
 ## Table of Contents
 
@@ -24,18 +25,18 @@ This project is a modern trading platform built with React and FastAPI, providin
 
 ## Key Features
 
--   **Real-time Market Data:** Leverages WebSockets for live updates of bid/ask prices and trade data.
--   **Interactive Candlestick Charts:** Uses TradingView Lightweight Charts to display historical and real-time price movements.
--   **Order Management:** Allows users to open and close orders with margin and leverage.
--   **User Authentication:** Implements secure authentication using JWT (JSON Web Tokens).
--   **Account Balance:** Displays the user's account balance.
--   **Profit/Loss (PNL) Calculation:** Calculates and displays the PNL for open orders.
--   **Asset Selection:** Provides a mechanism for selecting different trading assets.
--   **Responsive UI:** Built with React for a dynamic and responsive user experience.
+*   **Real-time Price Updates:** Uses WebSockets to receive live trade data for SOL, BTC, and ETH.
+*   **Order Management:** Allows users to create, manage, and close buy/sell orders with configurable margin, leverage, stop loss, and take profit.
+*   **Candlestick Charts:** Displays historical price data using candlestick charts with selectable time intervals (1m, 5m, 15m).
+*   **User Authentication:** Implements JWT-based authentication for user signup and signin.
+*   **Asynchronous Order Processing:** Uses Bull queue to process order-related events asynchronously.
+*   **Email Notifications:** Sends email notifications for order events (open, close, liquidate).
+*   **Redis Integration:** Uses Redis for real-time data distribution and caching.
+*   **Data Persistence:** Trade data is stored in a PostgreSQL database.
+*   **Server-Sent Events:** Order updates pushed to the client with Server-Sent Events (SSE).
+*   **Zustand State Management:** Uses Zustand for a simple frontend state management.
 
 ## Installation Guide
-
-Follow these steps to set up the project:
 
 1.  **Clone the repository:**
 
@@ -48,136 +49,141 @@ Follow these steps to set up the project:
 
     ```bash
     cd backend
-    npm install # or yarn install
+    npm install
+    cd ../httpServer
+    npm install
+    cd ../Price-Websocket
+    npm install
     ```
 
 3.  **Install frontend dependencies:**
 
     ```bash
-    cd ../frontend
-    npm install # or yarn install
+    cd frontend
+    npm install
     ```
 
 4.  **Configure environment variables:**
 
-    -   Create a `.env` file in both the `backend` and `frontend` directories.
-    -   Add the necessary environment variables (see [Environment Variables](#environment-variables) section).
+    Create `.env` files in the `backend`, `httpServer`, `Price-Websocket` and `frontend` directories based on the `.env.example` or similar files (if present).  Set the following environment variables:
 
-5.  **Run the backend server:**
+    *   **Backend/httpServer:**
+        *   `DATABASE_URL`: PostgreSQL database connection URI.
+        *   `REDIS_URL`: Redis connection URI.
+        *   `JWT_SECRET`: Secret key for JWT authentication.
+        *   `SENDGRID_API_KEY`: API key for SendGrid email service.
+        *   `FRONTEND_URL`: The URL for the frontend, in order to allow CORS.
+    *   **Price-Websocket:**
+        *   No specific env vars.
+    *   **Frontend:**
+        *   `VITE_BACKEND_URL`: The URL for the backend api.
+        *   `VITE_WEBSOCKET_URL`: The URL for the price-websocket server.
+
+5.  **Run the PostgreSQL database:**
+
+    Ensure you have PostgreSQL installed and running. Create a database and configure the `DATABASE_URL` environment variable accordingly.
+
+6.  **Run Redis server:**
+
+    Ensure you have Redis installed and running. Configure the `REDIS_URL` environment variable.
+
+7.  **Run the backend servers:**
 
     ```bash
-    cd ../backend
-    npm run dev # or yarn dev (if nodemon is configured)
+    cd backend
+    npm run dev # or npm start
+    cd ../httpServer
+    npm run dev # or npm start
+    cd ../Price-Websocket
+    npm run dev # or npm start
     ```
 
-6.  **Run the frontend development server:**
+8.  **Run the frontend:**
 
     ```bash
-    cd ../frontend
-    npm run dev # or yarn dev
+    cd frontend
+    npm run dev
     ```
 
 ## Usage
 
-### Frontend
+1.  **Access the platform:** Open your browser and navigate to the address where the frontend is running (typically `http://localhost:5173`).
 
--   The frontend is a React application accessible through a web browser.
--   It connects to the backend API to fetch data, manage orders, and authenticate users.
--   Users can sign in using the `Signin` component.
--   The `Home` component displays the trading interface.
--   Use the `buyAndSell` Component to create orders.
--   Use `candleChart` to view historical and real-time price charts.
+2.  **Sign up/Sign in:** Create a new user account or sign in with existing credentials.
 
-### Backend
+3.  **View real-time prices:** The main trading interface displays real-time prices for SOL, BTC, and ETH.
 
--   The backend is a FastAPI server that provides API endpoints for:
-    -   User authentication (`/api/v1/user/signin`).
-    -   Fetching candle data (`/candles`).
-    -   Opening orders (`/order/open`).
-    -   Closing orders (`/order/close`).
-    -   Fetching open orders (`/orders`).
--   It uses WebSockets to push real-time market data to the frontend.
+4.  **Place orders:** Use the buy/sell order form to create new orders, specifying margin, leverage, stop loss, and take profit values.
+
+5.  **Manage orders:** View and close open orders in the order management section.
+
+6.  **View candlestick charts:** Analyze historical price data using the candlestick charts with selectable time intervals.
 
 ## Environment Variables
 
-**Backend (.env):**
-
--   `JWT_SECRET_KEY`: Secret key used to sign JWT tokens.
--   `DATABASE_URL`: Connection string to the database.
--   `WS_PORT`: Port for the WebSocket server
-
-**Frontend (.env):**
-
--   `VITE_API_BASE_URL`: Base URL of the backend API (e.g., `http://localhost:3000`).
--   `VITE_WS_URL`: URL for the WebSocket server (e.g., `ws://localhost:8080`).
+*   `DATABASE_URL`: PostgreSQL database connection URI.
+*   `REDIS_URL`: Redis connection URI.
+*   `JWT_SECRET`: Secret key for JWT authentication.
+*   `SENDGRID_API_KEY`: API key for SendGrid email service.
+*   `FRONTEND_URL`: The URL for the frontend, in order to allow CORS.
+*   `VITE_BACKEND_URL`: The URL for the backend API.
+*   `VITE_WEBSOCKET_URL`: The URL for the price-websocket server.
 
 ## Project Structure
 
 ```
 /
-├── backend/
-│   ├── src/
-│   │   ├── jwt.ts
-│   │   ├── bidAsk.ts
-│   │   ├── index.ts
-│   │   ├── dataBook.ts
-│   │   ├── server.ts
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── nodemon.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── buyAndSell.jsx
-│   │   │   ├── askBid.jsx
-│   │   │   ├── candleChart.jsx
-│   │   │   ├── signin.jsx
-│   │   │   ├── logos.js
-│   │   │   ├── makeOrder.jsx
-│   │   ├── stores/
-│   │   │   └── useSelectedAsset.js
-│   │   ├── utils/
-│   │   │   └── wsstore.js
-│   │   ├── assets/
-│   │   │   ├── exness_logo.png
-│   │   │   ├── react.svg
-│   │   │   ├── btclogo.png
-│   │   │   ├── Solana_logo.png
-│   │   │   └── ethereum-eth-logo.png
-│   │   ├── index.css
-│   │   ├── main.jsx
-│   │   ├── App.jsx
-│   │   └── home.jsx
-│   ├── package.json
-│   ├── vite.config.js
-│   └── index.html
-└── README.md
+├── Readme.md                 # This file
+├── backend/                 # Backend server (Node.js/TypeScript)
+│   ├── src/                # Backend source code
+│   │   ├── index.ts           # Backend entry point
+│   ├── package.json         # Backend dependencies and scripts
+│   ├── tsconfig.json        # TypeScript configuration
+│   └── nodemon.json         # Nodemon configuration
+├── httpServer/              # HTTP server for API endpoints (Node.js/TypeScript)
+│   ├── src/                # HttpServer source code
+│   │   ├── server.ts          # HttpServer entry point
+│   │   ├── jwt.ts             # JWT related code
+│   │   ├── models/           # Data models
+│   │   ├── utils/            # Utility functions
+│   │   ├── services/          # Business Logic services
+│   ├── package.json         # HttpServer dependencies and scripts
+│   ├── tsconfig.json        # TypeScript configuration
+├── Price-Websocket/           # Price WebSocket Server
+│   ├── src/                # Price WebSocket source code
+│   │   ├── server.ts          # Price WebSocket entry point
+│   ├── package.json         # Price WebSocket dependencies and scripts
+│   ├── tsconfig.json        # TypeScript configuration
+├── frontend/                # Frontend application (React)
+│   ├── src/                # Frontend source code
+│   │   ├── components/       # React components
+│   │   ├── assets/           # Static assets (images, etc.)
+│   │   ├── App.jsx            # Main App Component
+│   │   ├── main.jsx           # React entry point
+│   │   ├── index.css          # Global CSS styles
+│   │   ├── stores/          # Zustand stores
+│   ├── package.json         # Frontend dependencies and scripts
+│   ├── vite.config.js       # Vite configuration
+│   ├── index.html           # HTML entry point
+
 ```
 
 ## Technologies Used
 
 <p align="left">
-    <a href="#"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"></a>
-    <a href="#"><img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI"></a>
-    <a href="#"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
-    <a href="#"><img src="https://img.shields.io/badge/WebSocket-000000?style=for-the-badge&logo=websocket&logoColor=white" alt="WebSocket"></a>
-    <a href="#"><img src="https://img.shields.io/badge/Zustand-804CD9?style=for-the-badge&logoColor=white" alt="Zustand"></a>
-    <a href="#"><img src="https://img.shields.io/badge/axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white" alt="Axios"></a>
-    <a href="#"><img src="https://img.shields.io/badge/TradingView-2296FF?style=for-the-badge&logo=tradingview&logoColor=white" alt="TradingView Lightweight Charts"></a>
+  <a href="#"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"></a>
+  <a href="#"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js"></a>
+  <a href="#"><img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"></a>
+  <a href="#"><img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white" alt="JSON Web Tokens"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white" alt="Axios"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Vite-B4B4B4?style=for-the-badge&logo=vite&logoColor=646CFF" alt="Vite"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Zustand-ffffff?style=for-the-badge&logo=zustand&logoColor=black" alt="Zustand"></a>
 </p>
-
--   **Backend:** FastAPI (Python), TypeScript
--   **Frontend:** React, JavaScript
--   **State Management:** Zustand
--   **Charting:** TradingView Lightweight Charts
--   **HTTP Client:** Axios
--   **Real-time Communication:** WebSockets
--   **Authentication:** JWT (JSON Web Tokens)
 
 ## License
 
 MIT License
-
-<p align="left">
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-</p>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
